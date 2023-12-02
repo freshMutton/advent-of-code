@@ -78,5 +78,11 @@ fn first_solution(input: &Vec<String>) -> String {
 }
 
 fn second_solution(input: &Vec<String>) -> String {
-    "".into()
+    let sum = input
+        .iter()
+        .map(|line| Game::parse(line))
+        .map(|game| game.max_red * game.max_green * game.max_blue)
+        .sum::<usize>();
+
+    format!("{}", sum)
 }
