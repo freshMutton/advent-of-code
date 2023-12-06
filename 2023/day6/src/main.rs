@@ -12,7 +12,11 @@ fn main() {
 }
 
 fn parse(input: &str) -> Vec<usize> {
-    input.split_whitespace().skip(1).map(|num| num.parse::<usize>().unwrap()).collect::<Vec<_>>()
+    input
+        .split_whitespace()
+        .skip(1)
+        .map(|num| num.parse::<usize>().unwrap())
+        .collect::<Vec<_>>()
 }
 
 fn first_solution(input: &Vec<String>) -> String {
@@ -21,7 +25,7 @@ fn first_solution(input: &Vec<String>) -> String {
     let times = parse(input.next().unwrap());
     let distance = parse(input.next().unwrap());
 
-    let mut winning_presses = vec!();
+    let mut winning_presses = vec![];
 
     for (time, distance) in times.iter().zip(distance.iter()) {
         let mut won = 0;
@@ -43,7 +47,15 @@ fn first_solution(input: &Vec<String>) -> String {
 }
 
 fn parse_kerned(input: &str) -> usize {
-    input.split_whitespace().skip(1).fold("".to_string(), |mut acc, char| { acc.push_str(char); acc }).parse::<usize>().unwrap()
+    input
+        .split_whitespace()
+        .skip(1)
+        .fold("".to_string(), |mut acc, char| {
+            acc.push_str(char);
+            acc
+        })
+        .parse::<usize>()
+        .unwrap()
 }
 
 fn second_solution(input: &Vec<String>) -> String {

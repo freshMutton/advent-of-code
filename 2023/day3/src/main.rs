@@ -1,5 +1,5 @@
-use std::io::{self, BufRead};
 use std::collections::{HashMap, HashSet};
+use std::io::{self, BufRead};
 
 fn main() {
     let input: Vec<String> = io::stdin()
@@ -15,9 +15,12 @@ fn main() {
 #[derive(Hash, Eq, PartialEq)]
 struct Position(isize, isize);
 
-fn parse(input: &Vec<String>, is_symbol: fn(char) -> bool) -> (HashMap<(Position, Position), usize>, HashSet<Position>) {
-    let mut numbers : HashMap<(Position, Position), usize> = HashMap::new();
-    let mut symbols : HashSet<Position> = HashSet::new();
+fn parse(
+    input: &Vec<String>,
+    is_symbol: fn(char) -> bool,
+) -> (HashMap<(Position, Position), usize>, HashSet<Position>) {
+    let mut numbers: HashMap<(Position, Position), usize> = HashMap::new();
+    let mut symbols: HashSet<Position> = HashSet::new();
 
     let mut search: Option<(Position, Position, String)> = None;
 
@@ -25,7 +28,7 @@ fn parse(input: &Vec<String>, is_symbol: fn(char) -> bool) -> (HashMap<(Position
         for (x, c) in line.chars().enumerate() {
             let x = x.try_into().unwrap();
             let y = y.try_into().unwrap();
-            
+
             match c {
                 _ if c.is_numeric() => {
                     if let Some(ref mut _search) = search {
@@ -34,13 +37,10 @@ fn parse(input: &Vec<String>, is_symbol: fn(char) -> bool) -> (HashMap<(Position
                     } else {
                         search = Some((Position(x, y), Position(x, y), c.to_string()));
                     }
-                },
+                }
                 _ => {
                     if let Some(_search) = search {
-                        numbers.insert(
-                            (_search.0, _search.1),
-                            _search.2.parse::<usize>().unwrap()
-                        );
+                        numbers.insert((_search.0, _search.1), _search.2.parse::<usize>().unwrap());
 
                         search = None;
                     }
@@ -48,15 +48,12 @@ fn parse(input: &Vec<String>, is_symbol: fn(char) -> bool) -> (HashMap<(Position
                     if is_symbol(c) {
                         symbols.insert(Position(x, y));
                     }
-                },
+                }
             }
         }
 
         if let Some(_search) = search {
-            numbers.insert(
-                (_search.0, _search.1),
-                _search.2.parse::<usize>().unwrap()
-            );
+            numbers.insert((_search.0, _search.1), _search.2.parse::<usize>().unwrap());
 
             search = None;
         }
@@ -68,14 +65,15 @@ fn parse(input: &Vec<String>, is_symbol: fn(char) -> bool) -> (HashMap<(Position
 fn first_solution(input: &Vec<String>) -> String {
     let (numbers, symbols) = parse(input, |c| c != '.');
 
-    let sum = numbers.iter()
+    let sum = numbers
+        .iter()
         .filter(|x| {
-            for pos in x.0.0.0-1..=x.0.1.0+1 {
-                if  symbols.contains(&Position(pos, x.0.0.1-1)) || 
-                    symbols.contains(&Position(pos, x.0.0.1)) || 
-                    symbols.contains(&Position(pos, x.0.0.1+1)) 
+            for pos in x.0 .0 .0 - 1..=x.0 .1 .0 + 1 {
+                if symbols.contains(&Position(pos, x.0 .0 .1 - 1))
+                    || symbols.contains(&Position(pos, x.0 .0 .1))
+                    || symbols.contains(&Position(pos, x.0 .0 .1 + 1))
                 {
-                    return true
+                    return true;
                 }
             }
 
@@ -93,14 +91,14 @@ fn second_solution(input: &Vec<String>) -> String {
     let sum = numbers
         .iter()
         .fold(HashMap::new(), |mut acc, number| {
-            for x in number.0.0.0-1..=number.0.1.0+1 {
-                for y in number.0.0.1-1..=number.0.0.1+1 {
+            for x in number.0 .0 .0 - 1..=number.0 .1 .0 + 1 {
+                for y in number.0 .0 .1 - 1..=number.0 .0 .1 + 1 {
                     let pos = Position(x, y);
 
                     if symbols.contains(&pos) {
                         acc.entry(pos)
                             .and_modify(|x: &mut Vec<usize>| x.push(*number.1))
-                            .or_insert(vec!(*number.1));
+                            .or_insert(vec![*number.1]);
                     }
                 }
             }
@@ -116,8 +114,6 @@ fn second_solution(input: &Vec<String>) -> String {
             None
         })
         .sum::<usize>();
-
-
 
     format!("{}", sum)
 }

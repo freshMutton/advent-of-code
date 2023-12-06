@@ -40,7 +40,11 @@ impl Game {
             for cube in set.split(", ") {
                 let cube_parts = cube.split(' ').collect::<Vec<&str>>();
 
-                let count = cube_parts.first().expect("valid input").parse::<usize>().unwrap(); 
+                let count = cube_parts
+                    .first()
+                    .expect("valid input")
+                    .parse::<usize>()
+                    .unwrap();
                 let colour = cube_parts.last().expect("valid input");
 
                 if colour == &"red" && count > max_red {

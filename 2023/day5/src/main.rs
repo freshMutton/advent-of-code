@@ -1,7 +1,7 @@
+use rayon::prelude::*;
+use std::collections::HashMap;
 use std::io::{self, BufRead};
 use std::iter::*;
-use std::collections::HashMap;
-use rayon::prelude::*;
 
 fn main() {
     let input: Vec<String> = io::stdin()
@@ -31,7 +31,7 @@ impl Mapping {
     }
 
     pub fn map(&self, input: &usize) -> Option<usize> {
-        let distance =  usize::checked_sub(*input, self.source_start);
+        let distance = usize::checked_sub(*input, self.source_start);
 
         if let Some(distance) = distance {
             if distance < self.range {
@@ -56,7 +56,13 @@ impl Almanac {
         let mut lines = input.iter();
 
         // seeds: 79 14 55 13
-        let seeds = lines.next().unwrap().split_whitespace().skip(1).map(|num| num.parse::<usize>().unwrap()).collect::<Vec<_>>();
+        let seeds = lines
+            .next()
+            .unwrap()
+            .split_whitespace()
+            .skip(1)
+            .map(|num| num.parse::<usize>().unwrap())
+            .collect::<Vec<_>>();
 
         // empty line
         lines.next();
@@ -68,7 +74,7 @@ impl Almanac {
             "water_light",
             "light_temperature",
             "temperature_humidity",
-            "humidity_location"
+            "humidity_location",
         ];
 
         let mut mappings = HashMap::new();
@@ -77,10 +83,7 @@ impl Almanac {
             mappings.insert(key.to_string(), Almanac::parse_mapping(&mut lines));
         }
 
-        Self {
-            seeds,
-            mappings
-        }
+        Self { seeds, mappings }
     }
 
     fn parse_mapping(lines: &mut std::slice::Iter<'_, String>) -> Vec<Mapping> {
@@ -89,12 +92,21 @@ impl Almanac {
         //50 98 2
         lines
             .take_while(|line| line != &&"".to_string())
-            .map(|line| Mapping::parse(line.split_whitespace().map(|num| num.parse::<usize>().unwrap()).collect::<Vec<_>>()))
+            .map(|line| {
+                Mapping::parse(
+                    line.split_whitespace()
+                        .map(|num| num.parse::<usize>().unwrap())
+                        .collect::<Vec<_>>(),
+                )
+            })
             .collect::<Vec<_>>()
     }
 
     pub fn map(&self, key: &str, value: &usize) -> usize {
-        let mapping = self.mappings.get(key).unwrap()
+        let mapping = self
+            .mappings
+            .get(key)
+            .unwrap()
             .iter()
             .find_map(|x| x.map(value));
 
@@ -104,21 +116,32 @@ impl Almanac {
             *value
         }
     }
-
 }
 
 fn first_solution(input: &Vec<String>) -> String {
     let almanac = Almanac::parse(input);
 
-    let result = almanac.seeds.iter()
-        .map(|seed| almanac.map("humidity_location",
-            &almanac.map("temperature_humidity",
-                &almanac.map("light_temperature",
-                    &almanac.map("water_light",
-                        &almanac.map("fertiliser_water",
-                            &almanac.map("soil_fertiliser",
-                                &almanac.map("seed_soil", seed)))))))
-        )
+    let result = almanac
+        .seeds
+        .iter()
+        .map(|seed| {
+            almanac.map(
+                "humidity_location",
+                &almanac.map(
+                    "temperature_humidity",
+                    &almanac.map(
+                        "light_temperature",
+                        &almanac.map(
+                            "water_light",
+                            &almanac.map(
+                                "fertiliser_water",
+                                &almanac.map("soil_fertiliser", &almanac.map("seed_soil", seed)),
+                            ),
+                        ),
+                    ),
+                ),
+            )
+        })
         .min();
 
     format!("{:?}", result)
@@ -128,33 +151,51 @@ fn first_solution(input: &Vec<String>) -> String {
 fn second_solution(input: &Vec<String>) -> String {
     let almanac = Almanac::parse(input);
 
-    let smallest = almanac.seeds.chunks(2)
-        .fold(usize::MAX, |smallest, range| {
-            let first = *range.first().unwrap();
-            let count = *range.last().unwrap();
+    let smallest = almanac.seeds.chunks(2).fold(usize::MAX, |smallest, range| {
+        let first = *range.first().unwrap();
+        let count = *range.last().unwrap();
 
-            let new_smallest = (first..first+count).par_bridge().fold(|| usize::MAX, |smallest, seed| {
-                let value = almanac.map("humidity_location",
-                    &almanac.map("temperature_humidity",
-                        &almanac.map("light_temperature",
-                            &almanac.map("water_light",
-                                &almanac.map("fertiliser_water",
-                                    &almanac.map("soil_fertiliser",
-                                        &almanac.map("seed_soil", &seed)))))));
+        let new_smallest = (first..first + count)
+            .par_bridge()
+            .fold(
+                || usize::MAX,
+                |smallest, seed| {
+                    let value = almanac.map(
+                        "humidity_location",
+                        &almanac.map(
+                            "temperature_humidity",
+                            &almanac.map(
+                                "light_temperature",
+                                &almanac.map(
+                                    "water_light",
+                                    &almanac.map(
+                                        "fertiliser_water",
+                                        &almanac.map(
+                                            "soil_fertiliser",
+                                            &almanac.map("seed_soil", &seed),
+                                        ),
+                                    ),
+                                ),
+                            ),
+                        ),
+                    );
 
-                if value < smallest {
-                    value
-                } else {
-                    smallest
-                }
-            }).min().unwrap();
+                    if value < smallest {
+                        value
+                    } else {
+                        smallest
+                    }
+                },
+            )
+            .min()
+            .unwrap();
 
-            if new_smallest < smallest {
-                new_smallest
-            } else {
-                smallest
-            }
-        });
+        if new_smallest < smallest {
+            new_smallest
+        } else {
+            smallest
+        }
+    });
 
     format!("{:?}", smallest)
 }

@@ -34,12 +34,11 @@ fn first_solution(input: &Vec<String>) -> String {
         sum += number.parse::<usize>().unwrap();
     }
 
-
     format!("{}", sum)
 }
 
 fn parse_digit(search: &str) -> Option<char> {
-    let digits = vec!(
+    let digits = vec![
         ("one", '1'),
         ("two", '2'),
         ("three", '3'),
@@ -49,12 +48,12 @@ fn parse_digit(search: &str) -> Option<char> {
         ("seven", '7'),
         ("eight", '8'),
         ("nine", '9'),
-    );
+    ];
 
     for digit in digits.iter() {
         // ugly, but cbf going for a parser-combinator
         if search.ends_with(digit.0) {
-            return Some(digit.1)
+            return Some(digit.1);
         }
     }
 
