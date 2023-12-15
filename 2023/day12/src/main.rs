@@ -1,5 +1,8 @@
 use std::{
-    io::{self, BufRead}, fmt::Display, iter, collections::HashMap,
+    collections::HashMap,
+    fmt::Display,
+    io::{self, BufRead},
+    iter,
 };
 
 use itertools::Itertools;
@@ -15,10 +18,11 @@ fn main() {
     println!("second solution: {}", second_solution(&input));
 }
 
-#[derive(Debug, Clone, PartialEq)] enum State {
+#[derive(Debug, Clone, PartialEq)]
+enum State {
     Ok,
     Broken,
-    Unknown
+    Unknown,
 }
 
 impl State {
@@ -45,8 +49,18 @@ impl Display for State {
 fn parse(input: &String) -> (Vec<State>, Vec<usize>) {
     let mut parts = input.split_whitespace();
 
-    let springs = parts.next().unwrap().chars().map(|c| State::parse(&c)).collect();
-    let groups = parts.next().unwrap().split(',').map(|c| c.parse::<usize>().unwrap()).collect();
+    let springs = parts
+        .next()
+        .unwrap()
+        .chars()
+        .map(|c| State::parse(&c))
+        .collect();
+    let groups = parts
+        .next()
+        .unwrap()
+        .split(',')
+        .map(|c| c.parse::<usize>().unwrap())
+        .collect();
 
     (springs, groups)
 }
@@ -70,7 +84,7 @@ fn valid(springs: &Vec<State>, groups: &Vec<usize>) -> bool {
         }
 
         if let Some(remainder) = queue.last_mut() {
-            if consuming_group && springs[i-1] != State::Broken {
+            if consuming_group && springs[i - 1] != State::Broken {
                 return false;
             }
 
@@ -89,20 +103,16 @@ fn valid(springs: &Vec<State>, groups: &Vec<usize>) -> bool {
     queue.iter().sum::<usize>() == 0
 }
 
-fn generate_permutations((springs, groups): (Vec<State>, Vec<usize>)) -> Vec<(Vec<State>, Vec<usize>)> {
-    let product = springs
-        .clone();
+fn generate_permutations(
+    (springs, groups): (Vec<State>, Vec<usize>),
+) -> Vec<(Vec<State>, Vec<usize>)> {
+    let product = springs.clone();
 
-    product        
+    product
         .iter()
         .enumerate()
         .filter(|(_, x)| *x == &State::Unknown)
-        .map(|(i, _)| {
-            vec![
-                (i, State::Broken),
-                (i, State::Ok),
-            ]
-        })
+        .map(|(i, _)| vec![(i, State::Broken), (i, State::Ok)])
         .multi_cartesian_product()
         .map(|replacements| {
             let mut updated = springs.clone();
@@ -117,7 +127,8 @@ fn generate_permutations((springs, groups): (Vec<State>, Vec<usize>)) -> Vec<(Ve
 }
 
 fn first_solution(input: &Vec<String>) -> String {
-    let result = input.iter()
+    let result = input
+        .iter()
         .map(parse)
         .flat_map(generate_permutations)
         .filter(|(springs, groups)| valid(&springs, &groups))
@@ -128,16 +139,18 @@ fn first_solution(input: &Vec<String>) -> String {
 
 fn expand((springs, groups): (Vec<State>, Vec<usize>)) -> (Vec<State>, Vec<usize>) {
     (
-        iter::repeat(springs).take(5).fold(Vec::new(), |mut acc, mut next| {
-            if acc.len() > 0 {
-                acc.push(State::Unknown);
-            }
+        iter::repeat(springs)
+            .take(5)
+            .fold(Vec::new(), |mut acc, mut next| {
+                if acc.len() > 0 {
+                    acc.push(State::Unknown);
+                }
 
-            acc.append(&mut next);
+                acc.append(&mut next);
 
-            acc
-        }),
-        groups.repeat(5)
+                acc
+            }),
+        groups.repeat(5),
     )
 }
 
@@ -147,7 +160,7 @@ fn count_permutations((springs, groups): (Vec<State>, Vec<usize>)) -> usize {
         g: usize,
         springs: &Vec<State>,
         groups: &Vec<usize>,
-        cache: &mut HashMap<(usize, usize), usize>
+        cache: &mut HashMap<(usize, usize), usize>,
     ) -> usize {
         if g == groups.len() {
             if springs[s..].iter().all(|s| *s != State::Broken) {
@@ -173,35 +186,37 @@ fn count_permutations((springs, groups): (Vec<State>, Vec<usize>)) -> usize {
         let group = &groups[g];
 
         match spring {
-            State::Ok => next(s+1, g, &springs, &groups, cache),
+            State::Ok => next(s + 1, g, &springs, &groups, cache),
             State::Unknown | State::Broken => {
                 let mut result = 0;
 
                 if *spring == State::Unknown {
-                    result += next(s+1, g, &springs, &groups, cache);
+                    result += next(s + 1, g, &springs, &groups, cache);
                 }
 
-                if s+group > springs.len() || springs[s..s+group].iter().any(|s| *s == State::Ok) {
+                if s + group > springs.len()
+                    || springs[s..s + group].iter().any(|s| *s == State::Ok)
+                {
                     result += 0;
                 } else {
-                    if s+group == springs.len() {
+                    if s + group == springs.len() {
                         if groups.len() - g == 1 {
                             result += 1;
                         } else {
                             result += 0;
                         }
                     } else {
-                        if springs[s+group] != State::Broken && s+group+1 <= springs.len() {
-                            result += next(s+group+1, g+1, &springs, &groups, cache);
+                        if springs[s + group] != State::Broken && s + group + 1 <= springs.len() {
+                            result += next(s + group + 1, g + 1, &springs, &groups, cache);
                         } else {
                             result += 0;
                         }
                     }
                 }
 
-                cache.insert((s,g), result);            
+                cache.insert((s, g), result);
                 return result;
-            },
+            }
         }
     }
 
@@ -209,7 +224,8 @@ fn count_permutations((springs, groups): (Vec<State>, Vec<usize>)) -> usize {
 }
 
 fn second_solution(input: &Vec<String>) -> String {
-    let result = input.iter()
+    let result = input
+        .iter()
         .map(parse)
         .map(expand)
         .map(count_permutations)
